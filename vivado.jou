@@ -2,12 +2,26 @@
 # Vivado v2022.2 (64-bit)
 # SW Build 3671981 on Fri Oct 14 05:00:03 MDT 2022
 # IP Build 3669848 on Fri Oct 14 08:30:02 MDT 2022
-# Start of session at: Wed Jul 12 02:59:03 2023
-# Process ID: 11488
+# Start of session at: Wed Jul 12 06:21:44 2023
+# Process ID: 4580
 # Current directory: D:/proj_pipeline
-# Command line: vivado.exe -gui_launcher_event rodinguilauncherevent11152 D:\proj_pipeline\proj_pipeline.xpr
+# Command line: vivado.exe -gui_launcher_event rodinguilauncherevent4544 D:\proj_pipeline\proj_pipeline.xpr
 # Log file: D:/proj_pipeline/vivado.log
 # Journal file: D:/proj_pipeline\vivado.jou
 # Running On: Mech-Win-Tera, OS: Windows, CPU Frequency: 2688 MHz, CPU Physical cores: 10, Host memory: 16898 MB
 #-----------------------------------------------------------
 start_gui
+open_project D:/proj_pipeline/proj_pipeline.xpr
+update_compile_order -fileset sources_1
+add_files -norecurse D:/proj_pipeline/proj_pipeline.srcs/sources_1/ip/cpuclk/cpuclk.xci
+export_ip_user_files -of_objects  [get_files  D:/proj_pipeline/proj_pipeline.srcs/sources_1/ip/cpuclk/cpuclk.xci] -lib_map_path [list {modelsim=D:/proj_pipeline/proj_pipeline.cache/compile_simlib/modelsim} {questa=D:/proj_pipeline/proj_pipeline.cache/compile_simlib/questa} {riviera=D:/proj_pipeline/proj_pipeline.cache/compile_simlib/riviera} {activehdl=D:/proj_pipeline/proj_pipeline.cache/compile_simlib/activehdl}] -force -quiet
+update_compile_order -fileset sources_1
+add_files -norecurse {D:/proj_pipeline/proj_pipeline.srcs/sources_1/ip/DRAM2/DRAM2.xci D:/proj_pipeline/proj_pipeline.srcs/sources_1/ip/DRAM1/DRAM1.xci D:/proj_pipeline/proj_pipeline.srcs/sources_1/ip/IROM/IROM.xci D:/proj_pipeline/proj_pipeline.srcs/sources_1/ip/Controller_ROM/Controller_ROM.xci D:/proj_pipeline/proj_pipeline.srcs/sources_1/ip/DRAM3/DRAM3.xci D:/proj_pipeline/proj_pipeline.srcs/sources_1/ip/DRAM0/DRAM0.xci}
+export_ip_user_files -of_objects  [get_files  {D:/proj_pipeline/proj_pipeline.srcs/sources_1/ip/DRAM2/DRAM2.xci D:/proj_pipeline/proj_pipeline.srcs/sources_1/ip/DRAM1/DRAM1.xci D:/proj_pipeline/proj_pipeline.srcs/sources_1/ip/IROM/IROM.xci D:/proj_pipeline/proj_pipeline.srcs/sources_1/ip/Controller_ROM/Controller_ROM.xci D:/proj_pipeline/proj_pipeline.srcs/sources_1/ip/DRAM3/DRAM3.xci D:/proj_pipeline/proj_pipeline.srcs/sources_1/ip/DRAM0/DRAM0.xci}] -lib_map_path [list {modelsim=D:/proj_pipeline/proj_pipeline.cache/compile_simlib/modelsim} {questa=D:/proj_pipeline/proj_pipeline.cache/compile_simlib/questa} {riviera=D:/proj_pipeline/proj_pipeline.cache/compile_simlib/riviera} {activehdl=D:/proj_pipeline/proj_pipeline.cache/compile_simlib/activehdl}] -force -quiet
+update_compile_order -fileset sources_1
+launch_runs impl_1 -to_step write_bitstream -jobs 16
+wait_on_run impl_1
+set_property AUTO_INCREMENTAL_CHECKPOINT 1 [get_runs impl_1]
+set_property AUTO_INCREMENTAL_CHECKPOINT.DIRECTORY D:/proj_pipeline/proj_pipeline.srcs/utils_1/imports/impl_1 [get_runs impl_1]
+set_property AUTO_INCREMENTAL_CHECKPOINT 1 [get_runs synth_1]
+set_property AUTO_INCREMENTAL_CHECKPOINT.DIRECTORY D:/proj_pipeline/proj_pipeline.srcs/utils_1/imports/synth_1 [get_runs synth_1]
