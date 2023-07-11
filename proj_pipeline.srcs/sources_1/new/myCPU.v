@@ -26,21 +26,13 @@ module myCPU (
 `endif
 );
 
-wire [31: 0] pc;
-assign inst_addr = pc[15: 2];
-
+// ===================================== ID ======================================= 
 Controller u_controller(.inst({inst[6: 0], inst[14: 12], inst[30]}));
 
-wire alu_f;
 wire [31: 0] ext;
-NPC u_npc(.pc(pc[31: 2]), .offset(ext[31: 2]), .br(alu_f), .op(u_controller.npc_op));
-
-wire [31: 0] alu_c;
-wire [29: 0] pc_din = u_controller.pc_sel==`PC_NPC ? u_npc.npc : alu_c[31: 2];
-PC u_pc(.rst(cpu_rst), .clk(cpu_clk), .din(pc_din), .pc(pc));
-
 SEXT u_sext(.op(u_controller.sext_op), .din(inst[31: 7]), .ext(ext));
 
+wire alu_f;
 wire [31: 0] dram_rdo;
 reg [31: 0] rf_wd;
 always @(*) begin
@@ -60,15 +52,26 @@ RF u_rf(
     .wR(inst[11:7]), .wD(rf_wd), .we(u_controller.rf_we)
 );
 
+
+// ===================================== IF ======================================= 
+wire [31: 0] pc;
+assign inst_addr = pc[15: 2];
+
+NPC u_npc(.pc(pc[31: 2]), .offset(ext[31: 2]), .br(alu_f), .op(u_controller.npc_op));
+
+wire [31: 0] alu_c;
+wire [29: 0] pc_din = u_controller.pc_sel==`PC_NPC ? u_npc.npc : alu_c[31: 2];
+PC u_pc(.rst(cpu_rst), .clk(cpu_clk), .din(pc_din), .pc(pc));
+
+
+// ===================================== EX ======================================= 
+
 wire [31: 0] alu_b = u_controller.alub_sel==`ALUB_RS2 ? u_rf.rD2 : ext;
 ALU u_alu(.op(u_controller.alu_op), .A(u_rf.rD1), .B(alu_b), .C(alu_c));
 assign alu_f = u_controller.br_sel==`BR_SIGN ? u_alu.sf : u_alu.zf;
 
-// DRAM u_dram(
-//     .a(alu_c[13: 0]), .spo(dram_rdo),
-//     .d(u_rf.rD2), .clk(cpu_clk), .we(u_controller.ram_we)
-// );
 
+// ===================================== MEM ====================================== 
 DM u_dm(
     .op(u_controller.ram_mode),
     .a_i(alu_c), .a_o(Bus_addr),
