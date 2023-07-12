@@ -44,7 +44,7 @@ wire [31: 0] id_pcjal;
 reg ex_b;
 reg [31: 0] ex_pcb;
 NPC u_npc(
-    .pc(if_pc),
+    .pc(if_pc[31: 2]),
     .jal(id_jal), .pcjal(id_pcjal[31: 2]),
     .b(ex_b), .pcb(ex_pcb[31: 2])
 );
