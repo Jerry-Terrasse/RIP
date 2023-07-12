@@ -55,9 +55,10 @@ PC u_pc(
     .npc(u_npc.npc), .pc(if_pc)
 );
 
+reg id_nop;
 IF_ID if_id(
     .rst(cpu_rst), .clk(cpu_clk),
-    .pause(id_pause),
+    .pause(id_pause), .nop_(id_nop),
 
     // IF
     .inst_(if_inst), .pc_(if_pc)
@@ -100,10 +101,10 @@ RF u_rf(
 assign id_jal = u_controller.npc_op==`NPC_JMP;
 assign id_pcjal = if_id.pc + id_ext;
 
-wire ex_nop;
+reg ex_nop;
 ID_EX id_ex(
     .rst(cpu_rst), .clk(cpu_clk),
-    .pause(ex_pause), .nop_(ex_nop),
+    .pause(ex_pause), .nop_(ex_nop | if_id.nop),
     
     // IF
     .pc_(if_id.pc),
@@ -195,21 +196,37 @@ end
 // assign mem_pause = 1'b0;
 // assign ex_nop = 1'b0;
 always @(*) begin
-    if(
+    if (ex_b) begin
+        pc_pause = 1'b0;
+        id_pause = 1'b0;
+        id_nop = 1'b1;
+        ex_pause = 1'b0;
+        ex_nop = 1'b1;
+        mem_pause = 1'b0;
+    end else if (id_jal) begin
+        pc_pause = 1'b0;
+        id_pause = 1'b0;
+        id_nop = 1'b1;
+        ex_pause = 1'b0;
+        ex_nop = 1'b0;
+        mem_pause = 1'b0;
+    end else if (
         ((id_ex.wR == id_rR1 || id_ex.wR == id_rR2) && id_ex.wR != 5'h0 && id_ex.rf_we) ||
         ((ex_mem.wR == id_rR1 || ex_mem.wR == id_rR2) && ex_mem.wR != 5'h0 && ex_mem.rf_we)
     ) begin
         pc_pause = 1'b1;
         id_pause = 1'b1;
+        id_nop = 1'b0;
         ex_pause = 1'b0;
-        mem_pause = 1'b0;
         ex_nop = 1'b1;
+        mem_pause = 1'b0;
     end else begin
         pc_pause = 1'b0;
         id_pause = 1'b0;
+        id_nop = 1'b0;
         ex_pause = 1'b0;
-        mem_pause = 1'b0;
         ex_nop = 1'b0;
+        mem_pause = 1'b0;
     end
 end
 
