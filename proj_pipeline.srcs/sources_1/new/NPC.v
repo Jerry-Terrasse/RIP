@@ -9,7 +9,7 @@ module NPC(
     input wire b,
     input wire [29: 0] pcb, // Branch & jalr
 
-    output reg [29: 0] npc,
+    output reg [29: 0] npc
 );
 
 always @(*) begin

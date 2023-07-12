@@ -35,8 +35,8 @@ assign if_inst_addr = if_pc[15: 2];
 
 wire id_jal;
 wire [31: 0] id_pcjal;
-wire ex_b;
-wire [31: 0] ex_pcb;
+reg ex_b;
+reg [31: 0] ex_pcb;
 NPC u_npc(
     .pc(if_pc),
     .jal(id_jal), .pcjal(id_pcjal[31: 2]),
@@ -147,7 +147,7 @@ EX_MEM ex_mem(
     .ram_mode_(id_ex.ram_mode),
     
     // EX
-    .alu_c_(ex_alu_c), .alu_f_(ex_alu_f),
+    .alu_c_(ex_alu_c), .alu_f_(ex_alu_f)
 );
 
 
