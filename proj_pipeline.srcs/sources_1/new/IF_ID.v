@@ -24,7 +24,7 @@ always @(posedge rst or posedge clk) begin
         nop <= 1'b1;
         pc <= 32'h0;
         inst <= 32'h0;
-    end else if(nop) begin
+    end else if(nop_) begin
         nop <= 1'b1;
         pc <= 32'h0;
         inst <= 32'h0;

@@ -47,7 +47,7 @@ always @(posedge rst or posedge clk) begin
 
         alu_c <= 32'h0;
         alu_f <= 1'b0;
-    end else if(nop) begin
+    end else if(nop_) begin
         nop <= 1'b1;
         pc <= 32'h0;
         ext <= 32'h0;
