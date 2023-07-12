@@ -30,6 +30,7 @@ reg pc_pause;
 reg id_pause;
 reg ex_pause;
 reg mem_pause;
+reg id_nop;
 reg ex_nop;
 
 // ===================================== IF ======================================= 
@@ -55,7 +56,6 @@ PC u_pc(
     .npc(u_npc.npc), .pc(if_pc)
 );
 
-reg id_nop;
 IF_ID if_id(
     .rst(cpu_rst), .clk(cpu_clk),
     .pause(id_pause), .nop_(id_nop),
@@ -101,7 +101,6 @@ RF u_rf(
 assign id_jal = u_controller.npc_op==`NPC_JMP;
 assign id_pcjal = if_id.pc + id_ext;
 
-reg ex_nop;
 ID_EX id_ex(
     .rst(cpu_rst), .clk(cpu_clk),
     .pause(ex_pause), .nop_(ex_nop | if_id.nop),
