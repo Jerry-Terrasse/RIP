@@ -26,6 +26,11 @@ module myCPU (
 `endif
 );
 
+reg pc_pause;
+reg id_pause;
+reg ex_pause;
+reg mem_pause;
+reg ex_nop;
 
 // ===================================== IF ======================================= 
 wire [31: 0] if_pc;
