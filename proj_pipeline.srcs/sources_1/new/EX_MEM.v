@@ -6,6 +6,7 @@ module EX_MEM(
     input wire rst,
     input wire clk,
     input wire pause,
+    input wire nop_,
 
     input wire [31: 0] pc_,
 
@@ -20,6 +21,8 @@ module EX_MEM(
     input wire alu_f_
 );
 
+reg nop;
+
 reg [31: 0] pc;
 reg [31: 0] ext;
 reg [2: 0] rf_wsel;
@@ -33,6 +36,7 @@ reg alu_f;
 
 always @(posedge rst or posedge clk) begin
     if(rst) begin
+        nop <= 1'b1;
         pc <= 32'h0;
         ext <= 32'h0;   
         rf_wsel <= `RF_ALUC;
@@ -43,7 +47,20 @@ always @(posedge rst or posedge clk) begin
 
         alu_c <= 32'h0;
         alu_f <= 1'b0;
+    end else if(nop) begin
+        nop <= 1'b1;
+        pc <= 32'h0;
+        ext <= 32'h0;
+        rf_wsel <= `RF_ALUC;
+        rf_we <= `RF_RD;
+        wR <= 5'h0;
+        rD2 <= 32'h0;
+        ram_mode <= `RAM_NO;
+
+        alu_c <= 32'h0;
+        alu_f <= 1'b0;
     end else if(pause) begin
+        nop <= nop;
         pc <= pc;
         ext <= ext;
         rf_wsel <= rf_wsel;
@@ -55,6 +72,7 @@ always @(posedge rst or posedge clk) begin
         alu_c <= alu_c;
         alu_f <= alu_f;
     end else begin
+        nop <= nop_;
         pc <= pc_;
         ext <= ext_;
         rf_wsel <= rf_wsel_;

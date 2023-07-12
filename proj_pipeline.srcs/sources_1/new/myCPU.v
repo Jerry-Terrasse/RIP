@@ -84,18 +84,21 @@ SEXT u_sext(.op(u_controller.sext_op), .din(id_inst[31: 7]), .ext(id_ext));
 wire [4: 0] wb_wR;
 wire wb_we;
 reg [31: 0] wb_wD;
+wire [4: 0] id_rR1 = id_inst[19:15];
+wire [4: 0] id_rR2 = id_inst[24:20];
 RF u_rf(
     .rst(cpu_rst), .clk(cpu_clk),
-    .rR1(id_inst[19:15]), .rR2(id_inst[24:20]),
+    .rR1(id_rR1), .rR2(id_rR2),
     .wR(wb_wR), .wD(wb_wD), .we(wb_we)
 );
 
 assign id_jal = u_controller.npc_op==`NPC_JMP;
 assign id_pcjal = if_id.pc + id_ext;
 
+wire ex_nop;
 ID_EX id_ex(
     .rst(cpu_rst), .clk(cpu_clk),
-    .pause(ex_pause),
+    .pause(ex_pause), .nop_(ex_nop),
     
     // IF
     .pc_(if_id.pc),
@@ -134,7 +137,7 @@ end
 
 EX_MEM ex_mem(
     .rst(cpu_rst), .clk(cpu_clk),
-    .pause(mem_pause),
+    .pause(mem_pause), .nop_(id_ex.nop),
     
     // IF
     .pc_(id_ex.pc),
@@ -181,19 +184,46 @@ always @(*) begin
 end
 
 // ==================================== RISK ======================================
-assign pc_pause = 1'b0;
-assign id_pause = 1'b0;
-assign ex_pause = 1'b0;
-assign mem_pause = 1'b0;
+// assign pc_pause = 1'b0;
+// assign id_pause = 1'b0;
+// assign ex_pause = 1'b0;
+// assign mem_pause = 1'b0;
+// assign ex_nop = 1'b0;
+always @(*) begin
+    if(
+        ((id_ex.wR == id_rR1 || id_ex.wR == id_rR2) && id_ex.wR != 5'h0 && id_ex.rf_we) ||
+        ((ex_mem.wR == id_rR1 || ex_mem.wR == id_rR2) && ex_mem.wR != 5'h0 && ex_mem.rf_we)
+    ) begin
+        pc_pause = 1'b1;
+        id_pause = 1'b1;
+        ex_pause = 1'b0;
+        mem_pause = 1'b0;
+        ex_nop = 1'b1;
+    end else begin
+        pc_pause = 1'b0;
+        id_pause = 1'b0;
+        ex_pause = 1'b0;
+        mem_pause = 1'b0;
+        ex_nop = 1'b0;
+    end
+end
 
 `ifdef RUN_TRACE
     // Debug Interface
-    always @(posedge cpu_clk) begin
-        debug_wb_have_inst <= 1'b1;
-        debug_wb_pc <= pc;
-        debug_wb_ena <= u_controller.rf_we;
-        debug_wb_reg <= inst[11:7];
-        debug_wb_value <= rf_wd;
+    always @(posedge rst or posedge cpu_clk) begin
+        if(rst) begin
+            debug_wb_have_inst <= 1'b0;
+            debug_wb_pc <= 32'h0;
+            debug_wb_ena <= 1'b0;
+            debug_wb_reg <= 5'h0;
+            debug_wb_value <= 32'h0;
+        end else begin
+            debug_wb_have_inst <= ~ex_mem.nop;
+            debug_wb_pc <= ex_mem.pc;
+            debug_wb_ena <= wb_we;
+            debug_wb_reg <= wb_wR;
+            debug_wb_value <= wb_wD;
+        end
     end
     // assign debug_wb_have_inst = 1'b1;
     // assign debug_wb_pc        = pc;
