@@ -99,8 +99,8 @@ module miniRV_SoC (
         .cpu_clk            (cpu_clk),
 
         // Interface to IROM
-        .inst_addr          (inst_addr[13: 0]),
-        .inst               (inst),
+        .if_inst_addr          (inst_addr[13: 0]),
+        .if_inst               (inst),
 
         // Interface to Bridge
         .Bus_addr           (Bus_addr),

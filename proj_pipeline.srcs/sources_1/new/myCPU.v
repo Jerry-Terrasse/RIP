@@ -210,7 +210,7 @@ end
 
 `ifdef RUN_TRACE
     // Debug Interface
-    always @(posedge rst or posedge cpu_clk) begin
+    always @(posedge cpu_rst or posedge cpu_clk) begin
         if(rst) begin
             debug_wb_have_inst <= 1'b0;
             debug_wb_pc <= 32'h0;
