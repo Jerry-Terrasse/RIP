@@ -4,25 +4,22 @@
 
 module NPC(
     input wire [29: 0] pc,
-    input wire [29: 0] offset,
-    input wire br,
-    input wire [1: 0] op,
+    input wire jal,
+    input wire [29: 0] pcjal,
+    input wire b,
+    input wire [29: 0] pcb, // Branch & jalr
 
     output reg [29: 0] npc,
-    output wire [31: 0] pc4,
-    output wire [31: 0] pcb
 );
 
-assign pc4 = {pc + 30'h1, 2'b00};
-assign pcb = {pc + offset, 2'b00};
-
 always @(*) begin
-    case(op)
-        `NPC_PC4: npc = pc4[31: 2];
-        `NPC_BR1: npc = br ? pcb[31: 2] : pc4[31: 2];
-        `NPC_BR0: npc = br ? pc4[31: 2] : pcb[31: 2];
-        `NPC_JMP: npc = pcb[31: 2];
-    endcase
+    if(b) begin
+        npc = pcb;
+    end else if(jal) begin
+        npc = pcjal;
+    end else begin
+        npc = pc + 1'h1; // pc + 4
+    end
 end
 
 endmodule

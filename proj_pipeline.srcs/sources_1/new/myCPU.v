@@ -7,8 +7,8 @@ module myCPU (
     input  wire         cpu_clk,
 
     // Interface to IROM
-    output wire [13:0]  inst_addr,
-    input  wire [31:0]  inst,
+    output wire [13:0]  if_inst_addr,
+    input  wire [31:0]  if_inst,
     
     // Interface to Bridge
     output wire [31:0]  Bus_addr,
@@ -26,58 +26,165 @@ module myCPU (
 `endif
 );
 
-// ===================================== ID ======================================= 
-Controller u_controller(.inst({inst[6: 0], inst[14: 12], inst[30]}));
 
-wire [31: 0] ext;
-SEXT u_sext(.op(u_controller.sext_op), .din(inst[31: 7]), .ext(ext));
+// ===================================== IF ======================================= 
+wire [31: 0] if_pc;
+assign if_inst_addr = if_pc[15: 2];
 
-wire alu_f;
-wire [31: 0] dram_rdo;
-reg [31: 0] rf_wd;
-always @(*) begin
-    case(u_controller.rf_wsel)
-        `RF_ALUC: rf_wd = alu_c;
-        `RF_ALUF: rf_wd = alu_f;
-        `RF_DRAM: rf_wd = dram_rdo;
-        `RF_SEXT: rf_wd = ext;
-        `RF_PC_4: rf_wd = u_npc.pc4;
-        `RF_PC_B: rf_wd = u_npc.pcb;
-        default: rf_wd = 32'h0;
-    endcase
-end
-RF u_rf(
+// NPC u_npc(.pc(pc[31: 2]), .offset(ext[31: 2]), .br(alu_f), .op(u_controller.npc_op));
+
+wire id_jal;
+wire [31: 0] id_pcjal;
+wire ex_b;
+wire [31: 0] ex_pcb;
+NPC u_npc(
+    .pc(if_pc),
+    .jal(id_jal), .pcjal(id_pcjal[31: 2]),
+    .b(ex_b), .pcb(ex_pcb[31: 2])
+);
+
+// wire [29: 0] pc_din = u_controller.pc_sel==`PC_NPC ? u_npc.npc : alu_c[31: 2];
+PC u_pc(
+    .rst(cpu_rst), .clk(cpu_clk), 
+    .pause(pc_pause),
+    .npc(u_npc.npc), .pc(if_pc)
+);
+
+IF_ID if_id(
     .rst(cpu_rst), .clk(cpu_clk),
-    .rR1(inst[19:15]), .rR2(inst[24:20]),
-    .wR(inst[11:7]), .wD(rf_wd), .we(u_controller.rf_we)
+    .pause(id_pause),
+
+    // IF
+    .inst_(if_inst), .pc_(if_pc)
 );
 
 
-// ===================================== IF ======================================= 
-wire [31: 0] pc;
-assign inst_addr = pc[15: 2];
+// ===================================== ID ======================================= 
+wire [31: 0] id_inst = if_id.inst;
+Controller u_controller(.inst({id_inst[6: 0], id_inst[14: 12], id_inst[30]}));
 
-NPC u_npc(.pc(pc[31: 2]), .offset(ext[31: 2]), .br(alu_f), .op(u_controller.npc_op));
+wire [31: 0] id_ext;
+SEXT u_sext(.op(u_controller.sext_op), .din(id_inst[31: 7]), .ext(id_ext));
 
-wire [31: 0] alu_c;
-wire [29: 0] pc_din = u_controller.pc_sel==`PC_NPC ? u_npc.npc : alu_c[31: 2];
-PC u_pc(.rst(cpu_rst), .clk(cpu_clk), .din(pc_din), .pc(pc));
+// wire [31: 0] alu_c;
+// wire alu_f;
+// wire [31: 0] dram_rdo;
+// reg [31: 0] rf_wd;
+// always @(*) begin
+//     case(u_controller.rf_wsel)
+//         `RF_ALUC: rf_wd = alu_c;
+//         `RF_ALUF: rf_wd = alu_f;
+//         `RF_DRAM: rf_wd = dram_rdo;
+//         `RF_SEXT: rf_wd = ext;
+//         `RF_PC_4: rf_wd = u_npc.pc4;
+//         `RF_PC_B: rf_wd = u_npc.pcb;
+//         default: rf_wd = 32'h0;
+//     endcase
+// end
+wire [4: 0] wb_wR;
+wire wb_we;
+reg [31: 0] wb_wD;
+RF u_rf(
+    .rst(cpu_rst), .clk(cpu_clk),
+    .rR1(id_inst[19:15]), .rR2(id_inst[24:20]),
+    .wR(wb_wR), .wD(wb_wD), .we(wb_we)
+);
+
+assign id_jal = u_controller.npc_op==`NPC_JMP;
+assign id_pcjal = if_id.pc + id_ext;
+
+ID_EX id_ex(
+    .rst(cpu_rst), .clk(cpu_clk),
+    .pause(ex_pause),
+    
+    // IF
+    .pc_(if_id.pc),
+    
+    // ID
+    .ext_(id_ext),
+    .rf_wsel_(u_controller.rf_wsel), .rf_we_(u_controller.rf_we),
+    .wR_(id_inst[11:7]),
+    .rD1_(u_rf.rD1), .rD2_(u_rf.rD2),
+
+    .alu_op_(u_controller.alu_op), .alub_sel_(u_controller.alub_sel),
+    .pc_sel_(u_controller.pc_sel), .npc_op_(u_controller.npc_op), .br_sel_(u_controller.br_sel),
+    .ram_mode_(u_controller.ram_mode)
+);
 
 
 // ===================================== EX ======================================= 
+wire [31: 0] ex_alu_b = id_ex.alub_sel==`ALUB_RS2 ? id_ex.rD2 : id_ex.ext;
+wire [31: 0] ex_alu_c;
+ALU u_alu(.op(id_ex.alu_op), .A(id_ex.rD1), .B(ex_alu_b), .C(ex_alu_c));
+assign ex_alu_f = id_ex.br_sel==`BR_SIGN ? u_alu.sf : u_alu.zf;
 
-wire [31: 0] alu_b = u_controller.alub_sel==`ALUB_RS2 ? u_rf.rD2 : ext;
-ALU u_alu(.op(u_controller.alu_op), .A(u_rf.rD1), .B(alu_b), .C(alu_c));
-assign alu_f = u_controller.br_sel==`BR_SIGN ? u_alu.sf : u_alu.zf;
+always @(*) begin
+    if(id_ex.pc_sel == `PC_ALU) begin
+        ex_b = 1'b1;
+        ex_pcb = ex_alu_c;
+    end else begin // id_ex.pc_sel == `PC_NPC
+        case(id_ex.npc_op)
+            `NPC_BR1: ex_b = ex_alu_f;
+            `NPC_BR0: ex_b = ~ex_alu_f;
+            default: ex_b = 1'b0;
+        endcase
+        ex_pcb = id_ex.pc + id_ex.ext;
+    end
+end
+
+EX_MEM ex_mem(
+    .rst(cpu_rst), .clk(cpu_clk),
+    .pause(mem_pause),
+    
+    // IF
+    .pc_(id_ex.pc),
+
+    // ID
+    .ext_(id_ex.ext),
+    .rf_wsel_(id_ex.rf_wsel), .rf_we_(id_ex.rf_we),
+    .wR_(id_ex.wR),
+    .rD2_(id_ex.rD2),
+    .ram_mode_(id_ex.ram_mode),
+    
+    // EX
+    .alu_c_(ex_alu_c), .alu_f_(ex_alu_f),
+);
 
 
 // ===================================== MEM ====================================== 
+wire [31: 0] mem_dram_rdo;
 DM u_dm(
-    .op(u_controller.ram_mode),
-    .a_i(alu_c), .a_o(Bus_addr),
-    .rdo(Bus_rdata), .rdo_ext(dram_rdo),
-    .wen(Bus_wen), .wdi(u_rf.rD2), .wdo(Bus_wdata)
+    .op(ex_mem.ram_mode),
+    .a_i(ex_mem.alu_c), .a_o(Bus_addr),
+    .rdo(Bus_rdata), .rdo_ext(mem_dram_rdo),
+    .wen(Bus_wen), .wdi(ex_mem.rD2), .wdo(Bus_wdata)
 );
+
+// MEM_WB mem_wb(
+//     .rst(cpu_rst), .clk(cpu_clk),
+//     .pause(wb_pause),
+// );
+
+// ===================================== WB ======================================= 
+assign wb_wR = ex_mem.wR;
+assign wb_we = ex_mem.rf_we;
+always @(*) begin
+    case(ex_mem.rf_wsel)
+        `RF_ALUC: wb_wD = ex_mem.alu_c;
+        `RF_ALUF: wb_wD = ex_mem.alu_f;
+        `RF_DRAM: wb_wD = mem_dram_rdo; // MEM & WB are in the same stage
+        `RF_SEXT: wb_wD = ex_mem.ext;
+        `RF_PC_4: wb_wD = ex_mem.pc + 32'h4;
+        `RF_PC_B: wb_wD = ex_mem.pc + ex_mem.ext;
+        default : wb_wD = 32'h0;
+    endcase
+end
+
+// ==================================== RISK ======================================
+assign pc_pause = 1'b0;
+assign id_pause = 1'b0;
+assign ex_pause = 1'b0;
+assign mem_pause = 1'b0;
 
 `ifdef RUN_TRACE
     // Debug Interface

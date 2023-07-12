@@ -2,23 +2,28 @@
 
 `include "defines.vh"
 
-module PC(
+module ID_EX(
     input wire rst,
     input wire clk,
     input wire pause,
 
-    input wire [29: 0] npc,
-
-    output reg [31: 0] pc
+    input wire [31: 0] pc_,
+    input wire [31: 0] wR_
 );
+
+reg [31: 0] pc;
+reg [31: 0] wR;
 
 always @(posedge rst or posedge clk) begin
     if(rst) begin
         pc <= 32'h0;
+        wR <= 32'h0;
     end else if(pause) begin
         pc <= pc;
+        wR <= wR;
     end else begin
-        pc <= {npc, 2'h0};
+        pc <= pc_;
+        wR <= wR_;
     end
 end
 

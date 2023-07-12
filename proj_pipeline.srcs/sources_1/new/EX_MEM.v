@@ -2,15 +2,15 @@
 
 `include "defines.vh"
 
-module PC(
+module EX_MEM(
     input wire rst,
     input wire clk,
     input wire pause,
 
-    input wire [29: 0] npc,
-
-    output reg [31: 0] pc
+    input wire [31: 0] pc_
 );
+
+reg [31: 0] pc;
 
 always @(posedge rst or posedge clk) begin
     if(rst) begin
@@ -18,7 +18,7 @@ always @(posedge rst or posedge clk) begin
     end else if(pause) begin
         pc <= pc;
     end else begin
-        pc <= {npc, 2'h0};
+        pc <= pc_;
     end
 end
 
