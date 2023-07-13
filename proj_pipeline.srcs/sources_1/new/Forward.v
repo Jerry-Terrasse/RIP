@@ -35,7 +35,15 @@ always @(*) begin
             default: rD = 32'h0;
         endcase
     else if(mem_rf_we && mem_wR == rR)
-        rD = mem_dram_rdo;
+        case(ex_rf_wsel)
+            `RF_ALUC: rD = ex_alu_c;
+            `RF_ALUF: rD = ex_alu_f;
+            `RF_DRAM: wb_wD = mem_dram_rdo;
+            `RF_SEXT: rD = ex_ext;
+            `RF_PC_4: rD = ex_pc + 32'h4;
+            `RF_PC_B: rD = ex_pc + ex_ext;
+            default: rD = 32'h0;
+        endcase
     else
         rD = rf_rD;
 end
