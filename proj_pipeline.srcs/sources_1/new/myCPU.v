@@ -101,8 +101,10 @@ RF u_rf(
 assign id_jal = u_controller.npc_op==`NPC_JMP;
 assign id_pcjal = if_id.pc + id_ext;
 
-reg [31: 0] id_rD1;
-reg [31: 0] id_rD2;
+wire [31: 0] ex_alu_c;
+wire [31: 0] mem_dram_rdo;
+wire [31: 0] id_rD1;
+wire [31: 0] id_rD2;
 Forward u_fwd_1(
     .rR(id_rR1), .rf_rD(u_rf.rD1),
 
@@ -153,7 +155,6 @@ ID_EX id_ex(
 
 // ===================================== EX ======================================= 
 wire [31: 0] ex_alu_b = id_ex.alub_sel==`ALUB_RS2 ? id_ex.rD2 : id_ex.ext;
-wire [31: 0] ex_alu_c;
 ALU u_alu(.op(id_ex.alu_op), .A(id_ex.rD1), .B(ex_alu_b), .C(ex_alu_c));
 assign ex_alu_f = id_ex.br_sel==`BR_SIGN ? u_alu.sf : u_alu.zf;
 
@@ -191,7 +192,6 @@ EX_MEM ex_mem(
 
 
 // ===================================== MEM ====================================== 
-wire [31: 0] mem_dram_rdo;
 DM u_dm(
     .op(ex_mem.ram_mode),
     .a_i(ex_mem.alu_c), .a_o(Bus_addr),

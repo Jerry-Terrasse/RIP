@@ -34,7 +34,7 @@ always @(*) begin
             `RF_PC_B: rD = ex_pc + ex_ext;
             default: rD = 32'h0;
         endcase
-    else if(mem_rf_we && mem_wR == rR && mem_rf_wsel == `RF_DRAM)
+    else if(mem_rf_we && mem_wR == rR)
         rD = mem_dram_rdo;
     else
         rD = rf_rD;
