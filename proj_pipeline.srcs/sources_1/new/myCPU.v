@@ -252,6 +252,13 @@ always @(*) begin
         ex_pause = 1'b0;
         ex_nop = 1'b0;
         mem_pause = 1'b0;
+    end else if((id_ex.wR == id_rR1 || id_ex.wR == id_rR2) && id_ex.wR != 5'h0 && id_ex.rf_we && id_ex.rf_wsel == `RF_DRAM) begin
+        pc_pause = 1'b1;
+        id_pause = 1'b1;
+        // id_nop = 1'b0;
+        ex_pause = 1'b0;
+        ex_nop = 1'b1;
+        mem_pause = 1'b0;
     // end else if (
     //     ((id_ex.wR == id_rR1 || id_ex.wR == id_rR2) && id_ex.wR != 5'h0 && id_ex.rf_we) ||
     //     ((ex_mem.wR == id_rR1 || ex_mem.wR == id_rR2) && ex_mem.wR != 5'h0 && ex_mem.rf_we)
