@@ -11,16 +11,16 @@ module Forward(
     input wire [2: 0] ex_rf_wsel,
     input wire [31: 0] ex_alu_c,
     input wire ex_alu_f,
-    input wire ex_pc,
-    input wire ex_ext,
+    input wire [31: 0] ex_pc,
+    input wire [31: 0] ex_ext,
 
     input wire mem_rf_we,
     input wire [4: 0] mem_wR,
     input wire [2: 0] mem_rf_wsel,
     input wire [31: 0] mem_alu_c,
     input wire mem_alu_f,
-    input wire mem_pc,
-    input wire mem_ext,
+    input wire [31: 0] mem_pc,
+    input wire [31: 0] mem_ext,
     input wire [31: 0] mem_dram_rdo,
 
     output reg [31: 0] rD
@@ -39,7 +39,7 @@ always @(*) begin
             default: rD = 32'h0;
         endcase
     else if(mem_rf_we && mem_wR == rR)
-        case(ex_rf_wsel)
+        case(mem_rf_wsel)
             `RF_ALUC: rD = mem_alu_c;
             `RF_ALUF: rD = mem_alu_f;
             `RF_DRAM: rD = mem_dram_rdo;
