@@ -115,6 +115,8 @@ Forward u_fwd_1(
 
     .mem_rf_we(ex_mem.rf_we),
     .mem_wR(ex_mem.wR), .mem_rf_wsel(ex_mem.rf_wsel),
+    .mem_alu_c(ex_mem.alu_c), .mem_alu_f(ex_mem.alu_f),
+    .mem_pc(ex_mem.pc), .mem_ext(ex_mem.ext),
     .mem_dram_rdo(mem_dram_rdo),
 
     .rD(id_rD1)
