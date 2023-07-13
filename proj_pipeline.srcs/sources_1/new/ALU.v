@@ -72,12 +72,12 @@ always @(*) zf = (A == B);
 always @(*) begin
     if(op == `ALU_SLT || op == `ALU_SLTU) begin
         if(A[31] == B[31]) begin
-            sf = C[31];
+            sf = difference[31];
         end else begin
             sf = minuend[31];
         end
     end else begin
-        sf = C[31];
+        sf = difference[31];
     end
 end
 
