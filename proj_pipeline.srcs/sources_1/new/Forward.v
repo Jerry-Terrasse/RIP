@@ -42,7 +42,7 @@ always @(*) begin
         case(ex_rf_wsel)
             `RF_ALUC: rD = mem_alu_c;
             `RF_ALUF: rD = mem_alu_f;
-            `RF_DRAM: wb_wD = mem_dram_rdo;
+            `RF_DRAM: rD = mem_dram_rdo;
             `RF_SEXT: rD = mem_ext;
             `RF_PC_4: rD = mem_pc + 32'h4;
             `RF_PC_B: rD = mem_pc + mem_ext;
