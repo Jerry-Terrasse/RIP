@@ -101,6 +101,37 @@ RF u_rf(
 assign id_jal = u_controller.npc_op==`NPC_JMP;
 assign id_pcjal = if_id.pc + id_ext;
 
+reg [31: 0] id_rD1;
+reg [31: 0] id_rD2;
+Forward u_fwd_1(
+    .rR(id_rR1), .rf_rD(u_rf.rD1),
+
+    .ex_rf_we(id_ex.rf_we),
+    .ex_wR(id_ex.wR), .ex_rf_wsel(id_ex.rf_wsel),
+    .ex_alu_c(ex_alu_c), .ex_alu_f(ex_alu_f),
+    .ex_pc(id_ex.pc), .ex_ext(id_ex.ext),
+
+    .mem_rf_we(ex_mem.rf_we),
+    .mem_wR(ex_mem.wR), .mem_rf_wsel(ex_mem.rf_wsel),
+    .mem_dram_rdo(mem_dram_rdo),
+
+    .rD(id_rD1)
+);
+Forward u_fwd_2(
+    .rR(id_rR2), .rf_rD(u_rf.rD2),
+
+    .ex_rf_we(id_ex.rf_we),
+    .ex_wR(id_ex.wR), .ex_rf_wsel(id_ex.rf_wsel),
+    .ex_alu_c(ex_alu_c), .ex_alu_f(ex_alu_f),
+    .ex_pc(id_ex.pc), .ex_ext(id_ex.ext),
+
+    .mem_rf_we(ex_mem.rf_we),
+    .mem_wR(ex_mem.wR), .mem_rf_wsel(ex_mem.rf_wsel),
+    .mem_dram_rdo(mem_dram_rdo),
+
+    .rD(id_rD2)
+);
+
 ID_EX id_ex(
     .rst(cpu_rst), .clk(cpu_clk),
     .pause(ex_pause), .nop_(ex_nop | if_id.nop),
@@ -112,7 +143,7 @@ ID_EX id_ex(
     .ext_(id_ext),
     .rf_wsel_(u_controller.rf_wsel), .rf_we_(u_controller.rf_we),
     .wR_(id_inst[11:7]),
-    .rD1_(u_rf.rD1), .rD2_(u_rf.rD2),
+    .rD1_(id_rD1), .rD2_(id_rD2),
 
     .alu_op_(u_controller.alu_op), .alub_sel_(u_controller.alub_sel),
     .pc_sel_(u_controller.pc_sel), .npc_op_(u_controller.npc_op), .br_sel_(u_controller.br_sel),
@@ -217,16 +248,16 @@ always @(*) begin
         ex_pause = 1'b0;
         ex_nop = 1'b0;
         mem_pause = 1'b0;
-    end else if (
-        ((id_ex.wR == id_rR1 || id_ex.wR == id_rR2) && id_ex.wR != 5'h0 && id_ex.rf_we) ||
-        ((ex_mem.wR == id_rR1 || ex_mem.wR == id_rR2) && ex_mem.wR != 5'h0 && ex_mem.rf_we)
-    ) begin
-        pc_pause = 1'b1;
-        id_pause = 1'b1;
-        // id_nop = 1'b0;
-        ex_pause = 1'b0;
-        ex_nop = 1'b1;
-        mem_pause = 1'b0;
+    // end else if (
+    //     ((id_ex.wR == id_rR1 || id_ex.wR == id_rR2) && id_ex.wR != 5'h0 && id_ex.rf_we) ||
+    //     ((ex_mem.wR == id_rR1 || ex_mem.wR == id_rR2) && ex_mem.wR != 5'h0 && ex_mem.rf_we)
+    // ) begin
+    //     pc_pause = 1'b1;
+    //     id_pause = 1'b1;
+    //     // id_nop = 1'b0;
+    //     ex_pause = 1'b0;
+    //     ex_nop = 1'b1;
+    //     mem_pause = 1'b0;
     end else begin
         pc_pause = 1'b0;
         id_pause = 1'b0;
