@@ -195,17 +195,25 @@ end
 // assign mem_pause = 1'b0;
 // assign ex_nop = 1'b0;
 always @(*) begin
+    if(ex_b || id_jal) begin
+        id_nop = 1'b1;
+    end else begin
+        id_nop = 1'b0;
+    end
+end
+
+always @(*) begin
     if (ex_b) begin
         pc_pause = 1'b0;
         id_pause = 1'b0;
-        id_nop = 1'b1;
+        // id_nop = 1'b1;
         ex_pause = 1'b0;
         ex_nop = 1'b1;
         mem_pause = 1'b0;
     end else if (id_jal) begin
         pc_pause = 1'b0;
         id_pause = 1'b0;
-        id_nop = 1'b1;
+        // id_nop = 1'b1;
         ex_pause = 1'b0;
         ex_nop = 1'b0;
         mem_pause = 1'b0;
@@ -215,14 +223,14 @@ always @(*) begin
     ) begin
         pc_pause = 1'b1;
         id_pause = 1'b1;
-        id_nop = 1'b0;
+        // id_nop = 1'b0;
         ex_pause = 1'b0;
         ex_nop = 1'b1;
         mem_pause = 1'b0;
     end else begin
         pc_pause = 1'b0;
         id_pause = 1'b0;
-        id_nop = 1'b0;
+        // id_nop = 1'b0;
         ex_pause = 1'b0;
         ex_nop = 1'b0;
         mem_pause = 1'b0;

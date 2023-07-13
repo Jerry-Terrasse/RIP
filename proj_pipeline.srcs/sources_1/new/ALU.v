@@ -67,7 +67,7 @@ always @(*) begin
     endcase
 end
 
-always @(*) zf = (C == 0);
+always @(*) zf = (A == B);
 
 always @(*) begin
     if(op == `ALU_SLT || op == `ALU_SLTU) begin
